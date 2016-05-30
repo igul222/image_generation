@@ -206,12 +206,11 @@ else:
     eps = T.cast(theano_srng.normal(mu.shape), theano.config.floatX)
     latents = mu + (eps * T.exp(log_sigma))
 
-# Theano bug: NaNs unless I pass 2D tensors to binary_crossentropy
 if MODE=='256ary':
     reconst_cost = T.nnet.categorical_crossentropy(
         T.nnet.softmax(output.reshape((-1,256))),
         inputs.flatten()
-    ).sum() / inputs.shape[0].astype(theano.config.floatX)
+    ).mean()
 else:
     reconst_cost = T.nnet.binary_crossentropy(
         T.nnet.sigmoid(output), 
@@ -220,6 +219,7 @@ else:
 
 
 reg_cost = lib.ops.kl_unit_gaussian.kl_unit_gaussian(mu, log_sigma)
+reg_cost /= lib.floatX(WIDTH*HEIGHT*N_CHANNELS)
 
 alpha = T.minimum(
     1,

@@ -8,7 +8,6 @@ sys.path.append(os.getcwd())
 
 try: # This only matters on Ishaan's computer
     import experiment_tools
-    experiment_tools.register_crash_notifier()
     experiment_tools.wait_for_gpu(high_priority=False)
 except ImportError:
     pass
@@ -131,7 +130,7 @@ if MODE=='256ary':
     cost = T.nnet.categorical_crossentropy(
         T.nnet.softmax(output.reshape((-1,256))),
         inputs.flatten()
-    ).sum() / inputs.shape[0].astype(theano.config.floatX)
+    ).mean()
 
     sample_fn = theano.function(
         [inputs],

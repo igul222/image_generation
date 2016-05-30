@@ -118,7 +118,9 @@ def Decoder(latents):
                 output_size=WIDTH,
                 output_n_channels=256*N_CHANNELS,
                 inputs=latents
-            ).reshape((-1, 256, N_CHANNELS, HEIGHT, WIDTH)).dimshuffle(0,2,3,4,1)
+            ).reshape(
+                (-1, 256, N_CHANNELS, HEIGHT, WIDTH)
+            ).dimshuffle(0,2,3,4,1)
         else:
             return lib.ops.conv_2d_decoder.Conv2DDecoder(
                 'Decoder',
@@ -152,7 +154,7 @@ if MODE=='256ary':
     reconst_cost = T.nnet.categorical_crossentropy(
         T.nnet.softmax(outputs.reshape((-1, 256))),
         images.flatten()
-    ).sum() / T.cast(images.shape[0], theano.config.floatX)
+    ).mean()
 else:
     # Theano bug: NaNs unless I pass 2D tensors to binary_crossentropy.
     reconst_cost = T.nnet.binary_crossentropy(
@@ -161,6 +163,7 @@ else:
     ).mean(axis=0).sum()
 
 reg_cost = lib.ops.kl_unit_gaussian.kl_unit_gaussian(mu, log_sigma)
+reg_cost /= lib.floatX(WIDTH*HEIGHT*N_CHANNELS)
 
 alpha = T.minimum(
     1,
